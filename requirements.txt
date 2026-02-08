@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+numpy
+tensorflow
+torch
+librosa
+soundfile
+python-dotenv
+
