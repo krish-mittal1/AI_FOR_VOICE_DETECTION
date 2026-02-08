@@ -10,14 +10,13 @@ const LANGUAGES = [
 ];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // Reusable style constants
 const styles = {
     card: 'bg-gray-900/60 backdrop-blur-2xl border border-gray-800/80 rounded-[2rem] p-8 sm:p-10 shadow-2xl shadow-black/40 ring-1 ring-white/5',
     label: 'block text-sm font-semibold text-gray-200 tracking-wide uppercase',
     input: 'w-full appearance-none bg-gray-800/60 border border-gray-700/80 rounded-xl px-5 py-4 text-gray-100 text-base font-medium transition-all duration-200 cursor-pointer hover:bg-gray-800/80 hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-violet-500/60 focus:border-violet-500',
-    iconBox: (color) => `flex-shrink-0 w-10 h-10 rounded-xl bg-${color}-500/20 flex items-center justify-center ring-1 ring-${color}-500/30`,
-    messageBox: (color) => `flex items-start gap-4 p-5 bg-${color}-950/50 border border-${color}-500/40 rounded-2xl`,
     btnBase: 'rounded-2xl font-bold text-base tracking-wide transition-all duration-300 flex items-center justify-center gap-3 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900',
     btnDisabled: 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-60',
     btnPrimary: 'bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white shadow-xl shadow-violet-600/30 hover:shadow-violet-600/50 hover:scale-[1.02] active:scale-[0.98] focus:ring-violet-500',
@@ -29,6 +28,17 @@ const formatFileSize = (bytes) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+// Helper: Get user-friendly error message
+const getErrorMessage = (error) => {
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+        return 'Unable to connect to the server. Please check your internet connection and try again.';
+    }
+    if (error.name === 'AbortError') {
+        return 'Request timed out. Please try again.';
+    }
+    return error.message || 'An unexpected error occurred. Please try again.';
 };
 
 // Sub-components
@@ -47,13 +57,14 @@ const Spinner = () => (
 
 const StatusMessage = ({ type, title, message }) => {
     const isError = type === 'error';
-    const colorClass = isError ? 'red' : 'emerald';
-    const iconPath = isError ? 'M6 18L18 6M6 6l12 12' : 'M5 13l4 4L19 7';
 
     return (
         <div className={`flex items-start gap-4 p-5 rounded-2xl ${isError ? 'bg-red-950/50 border border-red-500/40' : 'bg-emerald-950/50 border border-emerald-500/40'}`}>
             <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ring-1 ${isError ? 'bg-red-500/20 ring-red-500/30' : 'bg-emerald-500/20 ring-emerald-500/30'}`}>
-                <Icon path={iconPath} className={`w-5 h-5 ${isError ? 'text-red-400' : 'text-emerald-400'}`} />
+                <Icon
+                    path={isError ? 'M6 18L18 6M6 6l12 12' : 'M5 13l4 4L19 7'}
+                    className={`w-5 h-5 ${isError ? 'text-red-400' : 'text-emerald-400'}`}
+                />
             </div>
             <div className="flex-1 pt-1">
                 <p className={`text-sm font-semibold ${isError ? 'text-red-300' : 'text-emerald-300'}`}>{title}</p>
@@ -127,19 +138,30 @@ export default function VoiceDetection() {
         formData.append('file', file);
         formData.append('language', language);
 
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+
         try {
-            const res = await fetch('http://localhost:8000/api/voice-detection/upload', {
+            const res = await fetch(`${API_URL}/api/voice-detection/upload`, {
                 method: 'POST',
                 body: formData,
+                signal: controller.signal,
             });
 
-            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            clearTimeout(timeoutId);
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => null);
+                throw new Error(errorData?.detail || `Server error: ${res.status}`);
+            }
 
             const data = await res.json();
             setResponse(data);
             setSuccess(true);
         } catch (err) {
-            setError(err.message || 'An error occurred while processing your request.');
+            clearTimeout(timeoutId);
+            setError(getErrorMessage(err));
             setSuccess(false);
         } finally {
             setIsLoading(false);

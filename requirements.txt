@@ -1,9 +1,10 @@
 fastapi
-uvicorn
+uvicorn[standard]
+python-multipart
+pydantic
 numpy
 tensorflow
 torch
 librosa
 soundfile
 python-dotenv
-
