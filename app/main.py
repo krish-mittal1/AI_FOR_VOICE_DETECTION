@@ -1,9 +1,9 @@
 from fastapi import FastAPI, Depends , UploadFile , File , Form
 import base64
 from fastapi.responses import JSONResponse
-from app.schemas import Input, SuccessResponse, ErrorResponse
-from app.auth import verify_api_key
-from app.detector import detect, AudioProcessingError
+from schemas import Input, SuccessResponse, ErrorResponse
+from auth import verify_api_key
+from detector import detect, AudioProcessingError
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 
