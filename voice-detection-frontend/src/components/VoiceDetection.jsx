@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 
-// Constants
 const LANGUAGES = [
     { value: 'English', label: 'English' },
     { value: 'Hindi', label: 'Hindi' },
@@ -9,10 +8,14 @@ const LANGUAGES = [
     { value: 'Malayalam', label: 'Malayalam' },
 ];
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const API_URL =
+  window.location.hostname === 'localhost'
+    ? 'http://localhost:8000'
+    : 'https://ai-for-voice-detection.onrender.com';
 
-// Reusable style constants
+
+
 const styles = {
     card: 'bg-gray-900/60 backdrop-blur-2xl border border-gray-800/80 rounded-[2rem] p-8 sm:p-10 shadow-2xl shadow-black/40 ring-1 ring-white/5',
     label: 'block text-sm font-semibold text-gray-200 tracking-wide uppercase',
@@ -23,14 +26,14 @@ const styles = {
     btnSecondary: 'bg-gray-800/80 text-gray-300 border border-gray-700/80 hover:bg-gray-700/80 hover:text-white hover:border-gray-600 focus:ring-gray-500',
 };
 
-// Helper: Format file size
+
 const formatFileSize = (bytes) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-// Helper: Get user-friendly error message
+
 const getErrorMessage = (error) => {
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
         return 'Unable to connect to the server. Please check your internet connection and try again.';
@@ -41,7 +44,7 @@ const getErrorMessage = (error) => {
     return error.message || 'An unexpected error occurred. Please try again.';
 };
 
-// Sub-components
+
 const Icon = ({ path, className = 'w-5 h-5' }) => (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={path} />
@@ -74,7 +77,7 @@ const StatusMessage = ({ type, title, message }) => {
     );
 };
 
-// Main Component
+
 export default function VoiceDetection() {
     const [file, setFile] = useState(null);
     const [language, setLanguage] = useState('English');
@@ -85,7 +88,7 @@ export default function VoiceDetection() {
     const [dragActive, setDragActive] = useState(false);
     const inputRef = useRef(null);
 
-    // Validation
+    
     const validateFile = (selectedFile) => {
         if (!selectedFile) return null;
         if (selectedFile.type !== 'audio/mpeg') return 'Please upload an MP3 file only.';
@@ -95,7 +98,7 @@ export default function VoiceDetection() {
         return null;
     };
 
-    // Handlers
+    
     const handleDrag = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -138,7 +141,7 @@ export default function VoiceDetection() {
         formData.append('file', file);
         formData.append('language', language);
 
-        // Create abort controller for timeout
+        
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
 
@@ -185,7 +188,7 @@ export default function VoiceDetection() {
         if (inputRef.current) inputRef.current.value = '';
     };
 
-    // Computed
+    
     const isSubmitDisabled = isLoading || !file;
 
     const dropzoneClasses = `
@@ -199,7 +202,7 @@ export default function VoiceDetection() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950 text-gray-100 px-4 py-10 sm:py-16 antialiased">
             <div className="max-w-xl mx-auto">
-                {/* Header */}
+                {}
                 <header className="text-center mb-12">
                     <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 mb-6 shadow-2xl shadow-violet-600/30 ring-1 ring-white/10 transition-transform duration-300 hover:scale-105">
                         <Icon
@@ -215,10 +218,10 @@ export default function VoiceDetection() {
                     </p>
                 </header>
 
-                {/* Main Card */}
+                {}
                 <main className={styles.card}>
                     <form onSubmit={handleSubmit} className="space-y-8">
-                        {/* File Upload */}
+                        {}
                         <fieldset className="space-y-3">
                             <label className={styles.label}>Audio File</label>
                             <div
@@ -249,7 +252,7 @@ export default function VoiceDetection() {
                             </div>
                         </fieldset>
 
-                        {/* Language Selector */}
+                        {}
                         <fieldset className="space-y-3">
                             <label htmlFor="language" className={styles.label}>Language</label>
                             <div className="relative">
@@ -271,13 +274,13 @@ export default function VoiceDetection() {
                             </div>
                         </fieldset>
 
-                        {/* Status Messages */}
+                        {}
                         {error && <StatusMessage type="error" title="Error" message={error} />}
                         {success && response && (
                             <StatusMessage type="success" title="Success" message="Voice analysis completed successfully." />
                         )}
 
-                        {/* Action Buttons */}
+                        {}
                         <div className="flex gap-4">
                             <button
                                 type="submit"
@@ -309,7 +312,7 @@ export default function VoiceDetection() {
                         </div>
                     </form>
 
-                    {/* Results */}
+                    {}
                     {response && (
                         <section className="mt-10 pt-8 border-t border-gray-800/80" aria-label="Analysis results">
                             <header className="flex items-center gap-3 mb-5">
@@ -323,7 +326,7 @@ export default function VoiceDetection() {
                     )}
                 </main>
 
-                {/* Footer */}
+                {}
                 <footer className="text-center mt-8">
                     <p className="text-gray-500 text-sm font-medium">
                         Supported format: <span className="text-gray-400">MP3</span> (max 10MB)
@@ -334,7 +337,7 @@ export default function VoiceDetection() {
     );
 }
 
-// Sub-component: File Preview
+
 function FilePreview({ file, onClear }) {
     return (
         <div className="flex items-center justify-center gap-4">
@@ -363,7 +366,6 @@ function FilePreview({ file, onClear }) {
     );
 }
 
-// Sub-component: Empty Dropzone
 function DropzoneEmpty() {
     return (
         <div className="py-2">
